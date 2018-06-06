@@ -11,7 +11,7 @@ def save_new_file (finalfolderpath, filetosave):
             s = 'aaa',i,'.txt'
             with open(str(finalfolderpath)+str(i)+'.txt', 'w') as wf:
                 wf.write(line)
-                locationdata.append(finalfolderpath+str(i))
+                locationdata.append(finalfolderpath+str(i)+'.txt')
                 i=i+1           
     return locationdata
 
