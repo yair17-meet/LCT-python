@@ -92,7 +92,7 @@ class InMemoryFile(object):
     def readlines(self):
         return self.file.readlines()
 
-test_file = InMemoryFile("test_name", """some initial text data
+test_file = InMemoryFile(u"test_name", u"""some initial text data
 adgas
 sagsag
 asdga
