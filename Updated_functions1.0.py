@@ -1,4 +1,5 @@
 import io
+import random
 
 # Constants
 
@@ -6,12 +7,16 @@ import io
 GENERAL_ITEM_NAME = "item"
 # number of users
 NUMBER_OF_USERS = 5
+AVAILABLE_USER_IDS = set(range(NUMBER_OF_USERS))
 # Where all files will be split up to (minus the user number)
 GENERAL_FOLDER_PATH = "home"
 RECOVER_FOLDER_PATH = "homes"
 
 # All Locations
 LOCATIONS = dict()
+
+# Number of copies
+NUMBER_OF_COPIES = 5
 
 def generate_locations(num_of_items):
     paths = []
@@ -37,6 +42,46 @@ def get_file_lines(file):
     return lines
 
 
+def get_file_items(file):
+    return get_file_lines(file)
+
+
+def write_items(item, item_path_template, user_ids):
+    for user_id in user_ids:
+        item_path = item_path_template % user_id
+        with open(item_path, 'w') as item_file:
+            item_file.write(item)
+
+
+def distribute_items(file, items):
+    # TODO figure out file versioning
+    # Raise an exception if file key alread exists
+    file_dict = dict()
+
+    for item_id in range(len(items)):
+        file_dict[item_id] = random.sample(AVAILABLE_USER_IDS, NUMBER_OF_COPIES)
+        item_path_template = get_item_path_template(file, item_id)
+        # send/write items
+        write_items(items[item_id], item_path_template, file_dict[item_id])
+    
+    return file_dict
+
+
+def get_item_path_template(file, item_id):
+    file_key = get_file_key(file)
+    return "%s_%%d-%s.%d" % (GENERAL_FOLDER_PATH, file_key, item_id)
+
+
+def get_item_path(file, item_id, user_id):
+    return get_item_path_template(file, item_id) % user_id
+
+
+def find_item(file, item_id):
+    file_key = get_file_key(file)
+    first_user = LOCATIONS[file_key][item_id][0]
+    pass
+    
+
 def new_file(file_to_save):
     """
     Reads in a new file, splits it up and returns locations
@@ -44,45 +89,25 @@ def new_file(file_to_save):
     @return items_locations (list<string>): list of location for each item
     """
     # TODO add copies
-    lines = get_file_lines(file_to_save)
+    items = get_file_items(file_to_save)
+    file_dict = distribute_items(file_to_save, items)
     
-    item_paths = generate_locations(len(lines))
-    for i in range(len(item_paths)):
-        item_path = item_paths[i]
-        with open(item_path, 'w') as ip:
-            ip.write(lines[i])
+    file_key = get_file_key(file_to_save)
+    LOCATIONS[file_key] = file_dict
 
-        file_key = get_file_key(file_to_save)
-        if file_key in LOCATIONS:
-            LOCATIONS[file_key].append(item_path)
-        else:
-            LOCATIONS[file_key] = [item_path]
-
-# def maintenance(locations):
-#     """
-#     """
-#     missingitems = list ()
-#     for i in locations:
-#         my_file = Path(i)
-#         if my_file.is_file() == False:
-#             missingitems.append(i)
-    
-#     if len(missingitems) == 0:
-#         pass
-#     pass
 
 def recover_file(file_to_recover):
     """
     @param file_to_recover: the file needed to be recovered
     """
-    # Get the file items locations
     recovery_file_path = "%s-%s" % (RECOVER_FOLDER_PATH, file_to_recover)
     with open(recovery_file_path, 'w') as wf:
-        for item in LOCATIONS[file_to_recover]:
-            with open (item, 'r') as rf:
+        for i in range(len(LOCATIONS[file_to_recover])):
+            with open(get_item_path(file_to_recover, i, 1), 'r') as rf:
                 wf.write(rf.read())
+    
     return recovery_file_path
-        
+
 
 class InMemoryFile(object):
     def __init__(self, name, content):
@@ -102,7 +127,14 @@ sgsasg
 blaablaa""")
 
 new_file(test_file)
-print(recover_file(test_file.name))
-
 with open(recover_file(test_file.name)) as f:
     print(f.read())
+
+
+# with open(recover_file(test_file.name)) as f:
+#     print(f.read())
+
+
+# TODO
+# 1. Handle users going offline
+# 2. Handle file versioning
