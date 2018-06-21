@@ -1,4 +1,5 @@
 import io
+import os
 import random
 
 # Constants
@@ -16,7 +17,7 @@ RECOVER_FOLDER_PATH = "homes"
 LOCATIONS = dict()
 
 # Number of copies
-NUMBER_OF_COPIES = 5
+NUMBER_OF_COPIES = 2
 
 def generate_locations(num_of_items):
     paths = []
@@ -103,10 +104,25 @@ def recover_file(file_to_recover):
     recovery_file_path = "%s-%s" % (RECOVER_FOLDER_PATH, file_to_recover)
     with open(recovery_file_path, 'w') as wf:
         for i in range(len(LOCATIONS[file_to_recover])):
-            with open(get_item_path(file_to_recover, i, 1), 'r') as rf:
+            user_id = LOCATIONS[file_to_recover][i][0]
+            with open(get_item_path(file_to_recover, i, user_id), 'r') as rf:
                 wf.write(rf.read())
     
     return recovery_file_path
+
+
+def maintain(file_to_check):
+    missingitems = dict()
+    file_dict = LOCATIONS[file_to_check]
+    for item_id in range(len(file_dict)): 
+        user_ids = file_dict[item_id]
+        missing_user_ids = list()
+        for user_id in user_ids:
+            if not os.path.isfile(get_item_path(file_to_check, item_id, user_id)):
+                missing_user_ids.append(user_id)
+        if len(missing_user_ids) > 0:
+            missingitems[item_id] = missing_user_ids
+    return missingitems
 
 
 class InMemoryFile(object):
@@ -116,6 +132,7 @@ class InMemoryFile(object):
     
     def readlines(self):
         return self.file.readlines()
+
 
 test_file = InMemoryFile(u"test_name", u"""some initial text data
 adgas
@@ -130,11 +147,23 @@ new_file(test_file)
 with open(recover_file(test_file.name)) as f:
     print(f.read())
 
+# del LOCATIONS['test_name'][1][1]
+item_id = 3
+user_id = LOCATIONS[test_file.name][item_id][0]
+print("user id: %d" % user_id)
+item_path = get_item_path(test_file.name, item_id, user_id)
+print("exists: %s" % os.path.exists(item_path))
+print("remove result: %s" % os.remove(item_path))
+print("maintain result: %s" % maintain(test_file.name))
 
 # with open(recover_file(test_file.name)) as f:
 #     print(f.read())
 
 
-# TODO
+# TODO June 13th
 # 1. Handle users going offline
 # 2. Handle file versioning
+
+# TODO June 20th
+# 1. rename recover_file to get_file
+# 2. Split maintain into detect & recover, detect will update LOCATIONS and recover will scan LOCATIONS to recover missing copies. Start with implementing recover.
