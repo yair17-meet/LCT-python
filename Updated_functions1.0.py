@@ -15,7 +15,10 @@ RECOVER_FOLDER_PATH = "homes"
 
 # All Locations
 LOCATIONS = dict()
-
+USERS = dict()
+for i in range(NUMBER_OF_USERS):
+    USERS[i] = True
+print(USERS)
 # Number of copies
 NUMBER_OF_COPIES = 2
 
