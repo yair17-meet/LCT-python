@@ -2,7 +2,7 @@ import os
 import sys
 import random
 
-generalfolderpath = 'Newf1\user'
+generalfolderpath = 'Newf1\\user'
 filetosave = 'testFILE.txt'
 numberofusers = 5
 numberofcopies = 3
